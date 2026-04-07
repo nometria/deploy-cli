@@ -1,6 +1,6 @@
 {
   "name": "@nometria-ai/nom",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Deploy any project to any cloud from your terminal. One command, zero config.",
   "type": "module",
   "bin": {

@@ -17,7 +17,8 @@
  */
 import { homedir } from 'node:os';
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const TELEMETRY_ENDPOINT = 'https://app.nometria.com/cli/telemetry';
 const CONFIG_PATH = join(homedir(), '.nometria', 'config.json');
@@ -113,8 +114,6 @@ export function setTelemetry(enabled) {
 
 function getCliVersion() {
   try {
-    const { fileURLToPath } = await import('node:url');
-    const { dirname } = await import('node:path');
     const dir = dirname(fileURLToPath(import.meta.url));
     const pkg = JSON.parse(readFileSync(join(dir, '..', '..', 'package.json'), 'utf8'));
     return pkg.version;
