@@ -103,7 +103,7 @@ describe('Deploy Command', () => {
   const deploySrc = readFileSync(join(SRC, 'commands', 'deploy.js'), 'utf8');
 
   it('has instance cost table', () => {
-    assert.ok(deploySrc.includes('INSTANCE_COSTS'));
+    assert.ok(deploySrc.includes('INSTANCE_PRICING'));
     assert.ok(deploySrc.includes("'2gb'"));
     assert.ok(deploySrc.includes("'16gb'"));
   });
