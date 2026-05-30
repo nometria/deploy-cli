@@ -1,5 +1,5 @@
 /**
- * nom logs — View deployment logs via Deno functions.
+ * nom logs - View deployment logs via Deno functions.
  */
 import { readConfig } from '../lib/config.js';
 import { requireApiKey } from '../lib/auth.js';
@@ -23,7 +23,7 @@ export async function logs(flags) {
             console.log(line);
           }
         }
-      } catch { /* transient errors — keep polling */ }
+      } catch { /* transient errors - keep polling */ }
       await new Promise(r => setTimeout(r, 2000));
     }
   } else {

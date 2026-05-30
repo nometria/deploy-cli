@@ -1,5 +1,5 @@
 /**
- * nom whoami — Show current authenticated user via Deno functions.
+ * nom whoami - Show current authenticated user via Deno functions.
  */
 import { requireApiKey } from '../lib/auth.js';
 import { apiRequest } from '../lib/api.js';

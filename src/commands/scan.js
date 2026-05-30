@@ -1,5 +1,5 @@
 /**
- * nom scan — Run a deployment scan/audit via Deno functions.
+ * nom scan - Run a deployment scan/audit via Deno functions.
  */
 import { readConfig } from '../lib/config.js';
 import { requireApiKey } from '../lib/auth.js';

@@ -1,5 +1,5 @@
 /**
- * nom rollback — Roll back to a previous deployment.
+ * nom rollback - Roll back to a previous deployment.
  */
 import { requireApiKey } from '../lib/auth.js';
 import { apiRequest } from '../lib/api.js';
@@ -46,7 +46,7 @@ export async function rollback(flags, positionals) {
     const d = deployments[i];
     const marker = i === 0 ? ' (current)' : '';
     const status = d.status || 'unknown';
-    const date = d.created_at ? new Date(d.created_at).toLocaleString() : '—';
+    const date = d.created_at ? new Date(d.created_at).toLocaleString() : '-';
     console.log(`  ${i + 1}. ${d.id}  ${status}  ${date}${marker}`);
   }
   console.log();

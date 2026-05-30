@@ -1,5 +1,5 @@
 /**
- * nom terminate — Terminate (destroy) an instance via Deno functions.
+ * nom terminate - Terminate (destroy) an instance via Deno functions.
  */
 import { readConfig } from '../lib/config.js';
 import { requireApiKey } from '../lib/auth.js';

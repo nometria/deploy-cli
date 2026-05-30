@@ -1,5 +1,5 @@
 /**
- * Anonymous CLI telemetry — tracks deployment funnel to identify drop-off points.
+ * Anonymous CLI telemetry - tracks deployment funnel to identify drop-off points.
  *
  * Opt-out: set NOM_TELEMETRY=0 or run `nom config telemetry false`
  *
@@ -40,7 +40,7 @@ function isEnabled() {
 }
 
 /**
- * Record a CLI event. Non-blocking — fire and forget.
+ * Record a CLI event. Non-blocking - fire and forget.
  */
 export function trackEvent(event, properties = {}) {
   if (!isEnabled()) return;
@@ -57,7 +57,7 @@ export function trackEvent(event, properties = {}) {
     timestamp: new Date().toISOString(),
   };
 
-  // Fire and forget — never block the CLI
+  // Fire and forget - never block the CLI
   try {
     fetch(TELEMETRY_ENDPOINT, {
       method: 'POST',

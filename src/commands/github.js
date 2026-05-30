@@ -1,11 +1,11 @@
 /**
- * nom github — Manage GitHub integration via Deno functions.
+ * nom github - Manage GitHub integration via Deno functions.
  *
  * Subcommands:
- *   connect  — Link GitHub account via OAuth in browser
- *   status   — Show GitHub connection status
- *   repos    — List connected repositories
- *   push     — Push changes to GitHub
+ *   connect  - Link GitHub account via OAuth in browser
+ *   status   - Show GitHub connection status
+ *   repos    - List connected repositories
+ *   push     - Push changes to GitHub
  */
 import { createServer } from 'node:http';
 import { execSync } from 'node:child_process';
@@ -164,9 +164,9 @@ async function githubStatus(flags) {
   console.log(`
   GitHub Connection
   Connected:  ${result.connected ? 'Yes' : 'No'}
-  Username:   ${result.username || '—'}
-  Repository: ${result.repository || '—'}
-  Last Sync:  ${result.last_sync || '—'}
+  Username:   ${result.username || '-'}
+  Repository: ${result.repository || '-'}
+  Last Sync:  ${result.last_sync || '-'}
 `);
 }
 
@@ -236,7 +236,7 @@ function openBrowser(url) {
     else if (process.platform === 'win32') execSync(`start "" "${url}"`);
     else execSync(`xdg-open "${url}"`);
   } catch {
-    // Silently fail — user can copy the URL from the console
+    // Silently fail - user can copy the URL from the console
   }
 }
 

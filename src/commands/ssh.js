@@ -1,5 +1,5 @@
 /**
- * nom ssh — Get SSH/exec access to a deployed instance.
+ * nom ssh - Get SSH/exec access to a deployed instance.
  * Uses AWS SSM or provides SSH instructions.
  */
 import { requireApiKey } from '../lib/auth.js';
@@ -44,7 +44,7 @@ export async function ssh(flags, positionals) {
   const command = positionals.join(' ');
 
   if (command) {
-    // nom ssh <command> — execute remote command
+    // nom ssh <command> - execute remote command
     console.log(`\n  Running on ${appId} (${ip || instanceId}):\n`);
     try {
       const execResult = await apiRequest('/cli/exec', {
@@ -60,7 +60,7 @@ export async function ssh(flags, positionals) {
       showSshInstructions(ip, instanceId);
     }
   } else {
-    // nom ssh — show connection instructions
+    // nom ssh - show connection instructions
     showSshInstructions(ip, instanceId);
   }
 }

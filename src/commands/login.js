@@ -1,5 +1,5 @@
 /**
- * nom login — Authenticate via browser (default) or API key paste.
+ * nom login - Authenticate via browser (default) or API key paste.
  *
  * Default flow (browser):
  *   1. Start a local HTTP server on a random port
@@ -143,7 +143,7 @@ async function exchangeTokenForApiKey(jwtToken, email) {
     });
 
     const raw = await res.json();
-    // server.js wraps all responses in { data: ... } — unwrap
+    // server.js wraps all responses in { data: ... } - unwrap
     const data = raw?.data !== undefined ? raw.data : raw;
 
     if (!res.ok || !data.success) {
@@ -205,7 +205,7 @@ function openBrowser(url) {
     else if (platform === 'win32') execSync(`start "" "${url}"`);
     else execSync(`xdg-open "${url}"`);
   } catch {
-    // Silently fail — user can copy the URL from the console
+    // Silently fail - user can copy the URL from the console
   }
 }
 

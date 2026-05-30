@@ -1,5 +1,5 @@
 /**
- * nom env — Manage environment variables via Deno functions.
+ * nom env - Manage environment variables via Deno functions.
  *
  * Subcommands:
  *   set KEY=VALUE [KEY=VALUE ...]   Set environment variables
@@ -185,8 +185,8 @@ async function envCompare(flags) {
   console.log('  Key                        Production  Preview');
   console.log('  ─────────────────────────  ──────────  ───────');
   for (const key of [...allKeys].sort()) {
-    const inProd = prodVars.has(key) ? 'set' : '—';
-    const inPrev = prevVars.has(key) ? 'set' : '—';
+    const inProd = prodVars.has(key) ? 'set' : '-';
+    const inPrev = prevVars.has(key) ? 'set' : '-';
     const marker = inProd !== inPrev ? ' *' : '';
     console.log(`  ${key.padEnd(27)} ${inProd.padEnd(12)}${inPrev}${marker}`);
   }

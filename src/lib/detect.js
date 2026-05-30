@@ -127,7 +127,7 @@ export function detectFramework(dir = process.cwd()) {
     return { framework: 'python', build: { command: null, output: '.' } };
   }
 
-  // Flag as uncertain — let callers decide whether to prompt or default
+  // Flag as uncertain - let callers decide whether to prompt or default
   return { framework: 'static', build: { command: null, output: '.' }, uncertain: true };
 }
 

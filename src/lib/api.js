@@ -32,19 +32,22 @@ export async function apiRequest(path, { method = 'POST', body = {}, apiKey } = 
 
   if (!res.ok) {
     let message = `API error: ${res.status}`;
+    let data = null;
     try {
       const raw = await res.json();
       // server.js wraps errors in { data: { error: ... } }
-      const data = raw?.data || raw;
+      data = raw?.data || raw;
       message = data.detail || data.message || data.error || message;
     } catch { /* ignore parse errors */ }
     const err = new Error(message);
     err.status = res.status;
+    err.data = data;
     if (res.status === 401) err.code = 'ERR_AUTH';
+    if (data?.code) err.code = data.code;
     throw err;
   }
 
-  // server.js wraps all JSON responses in { data: ... } — unwrap automatically
+  // server.js wraps all JSON responses in { data: ... } - unwrap automatically
   const raw = await res.json();
   return raw?.data !== undefined ? raw.data : raw;
 }
@@ -62,9 +65,16 @@ export async function uploadFile(apiKey, fileBuffer, fileName = 'code.tar.gz') {
   formData.append('api_key', apiKey);
   formData.append('file', new Blob([fileBuffer], { type: 'application/gzip' }), fileName);
 
+  // Send the API key as a Bearer header in addition to the form field so the
+  // server can authenticate BEFORE materialising the multi-hundred-MB body.
+  // Form field is kept for backwards compatibility with older /cli/upload
+  // builds that only read body fields.
   const res = await fetch(url, {
     method: 'POST',
-    headers: { 'User-Agent': 'nom-cli' },
+    headers: {
+      'User-Agent': 'nom-cli',
+      'Authorization': `Bearer ${apiKey}`,
+    },
     body: formData,
   });
 

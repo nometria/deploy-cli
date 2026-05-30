@@ -1,8 +1,8 @@
 /**
- * nom domain — Manage custom domains via Deno functions.
+ * nom domain - Manage custom domains via Deno functions.
  *
  * Subcommands:
- *   add <domain>  — Add a custom domain to the app
+ *   add <domain>  - Add a custom domain to the app
  */
 import { readConfig } from '../lib/config.js';
 import { requireApiKey } from '../lib/auth.js';

@@ -1,5 +1,5 @@
 /**
- * Simple terminal spinner — zero dependencies.
+ * Simple terminal spinner - zero dependencies.
  */
 
 const FRAMES = ['   ', '.  ', '.. ', '...'];

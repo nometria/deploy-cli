@@ -1,5 +1,5 @@
 /**
- * nom start — Start a stopped instance via Deno functions.
+ * nom start - Start a stopped instance via Deno functions.
  */
 import { readConfig } from '../lib/config.js';
 import { requireApiKey } from '../lib/auth.js';

@@ -1,5 +1,5 @@
 /**
- * nom cron — Manage scheduled tasks on deployed instances.
+ * nom cron - Manage scheduled tasks on deployed instances.
  *
  * Subcommands:
  *   add <schedule> <command>   Add a cron job (e.g., nom cron add "0 3 * * *" "npm run cleanup")
@@ -121,7 +121,7 @@ async function cronList(flags) {
 
     console.log(`\n  Cron jobs (${jobs.length}):\n`);
     for (const job of jobs) {
-      console.log(`  ${job.id || '—'}`);
+      console.log(`  ${job.id || '-'}`);
       console.log(`    Schedule: ${job.schedule}`);
       console.log(`    Command:  ${job.command}`);
       if (job.last_run) console.log(`    Last run: ${job.last_run}`);

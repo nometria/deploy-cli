@@ -40,7 +40,7 @@ export function setCache(key, data) {
     const path = join(CACHE_DIR, `${key}.json`);
     writeFileSync(path, JSON.stringify({ timestamp: Date.now(), data }));
   } catch {
-    // Non-fatal — cache write failure shouldn't break CLI
+    // Non-fatal - cache write failure shouldn't break CLI
   }
 }
 

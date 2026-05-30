@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * nom — Deploy any project to any cloud from your terminal.
+ * nom - Deploy any project to any cloud from your terminal.
  *
  * Commands:
  *   nom init      Create a nometria.json config file
@@ -22,6 +22,7 @@ import { login } from './commands/login.js';
 import { whoami } from './commands/whoami.js';
 import { github } from './commands/github.js';
 import { start } from './commands/start.js';
+import { restart } from './commands/restart.js';
 import { stop } from './commands/stop.js';
 import { terminate } from './commands/terminate.js';
 import { upgrade } from './commands/upgrade.js';
@@ -34,6 +35,10 @@ import { rollback } from './commands/rollback.js';
 import { ssh } from './commands/ssh.js';
 import { db } from './commands/db.js';
 import { cron } from './commands/cron.js';
+import { open } from './commands/open.js';
+import { services } from './commands/services.js';
+import { doctor } from './commands/doctor.js';
+import { webhook } from './commands/webhook.js';
 
 const { values, positionals } = parseArgs({
   allowPositionals: true,
@@ -50,6 +55,7 @@ const { values, positionals } = parseArgs({
     preview:   { type: 'boolean', default: false },
     production:{ type: 'boolean', default: false },
     message:   { type: 'string', short: 'm' },
+    events:    { type: 'string' },
   },
   strict: false,
 });
@@ -87,6 +93,7 @@ const commands = {
   whoami,
   github,
   start,
+  restart,
   stop,
   terminate,
   upgrade,
@@ -99,6 +106,10 @@ const commands = {
   ssh,
   db,
   cron,
+  open,
+  services,
+  doctor,
+  webhook,
 };
 
 const handler = commands[command];
@@ -118,13 +129,20 @@ try {
     console.error(`\n  No nometria.json found. Run: nom init`);
     console.error(`  Docs: https://docs.nometria.com/cli/install\n`);
   } else if (err.status === 402) {
-    console.error(`\n  Payment required. Upgrade your plan:`);
-    console.error(`  https://nometria.com/pricing\n`);
+    console.error(`\n  Payment required for this action.`);
+    console.error(`  Open your dashboard: https://nometria.com/dashboard\n`);
   } else if (err.status === 404) {
     console.error(`\n  App not found. List your apps: nom list`);
     console.error(`  Dashboard: https://nometria.com/dashboard\n`);
   } else if (err.status === 429) {
     console.error(`\n  Rate limited. Wait a moment and try again.\n`);
+  } else if (err.code === 'ERR_IDLE_STOPPED') {
+    console.error(`\n  ${err.message}`);
+    if (err.data?.cli_hint) console.error(`  ${err.data.cli_hint}`);
+    console.error();
+  } else if (err.code === 'ERR_DUPLICATE_MIGRATION') {
+    console.error(`\n  ${err.message}`);
+    console.error('  Re-run without --yes to choose update vs create new.\n');
   } else {
     console.error(`\n  Error: ${err.message}`);
     console.error(`  Docs: https://docs.nometria.com`);
@@ -137,7 +155,7 @@ try {
 
 function printHelp() {
   console.log(`
-  nom — Deploy any project to any cloud.
+  nom - Deploy any project to any cloud.
 
   Usage:
     nom [command] [options]
@@ -159,6 +177,7 @@ function printHelp() {
     github push [-m]    Push changes to GitHub
 
     start               Start a stopped instance
+    restart             Restart an app paused for inactivity (start + redeploy)
     stop                Stop a running instance
     terminate           Terminate instance permanently
     upgrade <size>      Upgrade instance (2gb/4gb/8gb/16gb)
@@ -169,11 +188,23 @@ function printHelp() {
     db shell            Show database connection details
     db migrate          Run pending migrations
 
+    services add <type> Add a backend service (postgres/mysql/mongodb/redis/minio)
+    services list       List running services
+    services remove <n> Remove a service
+    services info <n>   Show connection details
+
     domain add <domain> Add custom domain
     env set KEY=VALUE   Set environment variables
     env list            List environment variables
     env delete KEY      Delete environment variable
+
+    webhook add <url>   Subscribe to deployment events
+    webhook list        List configured webhooks
+    webhook delete <id> Remove a webhook
+
     scan                Run AI security scan
+    open [target]       Open app/dashboard/logs/docs in browser
+    doctor              Check system health and diagnose issues
     cron add <s> <cmd>  Add a scheduled task
     cron list           List cron jobs
     cron delete <id>    Delete a cron job

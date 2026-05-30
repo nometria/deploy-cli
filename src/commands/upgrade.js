@@ -1,5 +1,5 @@
 /**
- * nom upgrade — Upgrade instance size via Deno functions.
+ * nom upgrade - Upgrade instance size via Deno functions.
  */
 import { readConfig } from '../lib/config.js';
 import { requireApiKey } from '../lib/auth.js';

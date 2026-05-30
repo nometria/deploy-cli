@@ -1,5 +1,5 @@
 /**
- * nom stop — Stop a running instance via Deno functions.
+ * nom stop - Stop a running instance via Deno functions.
  */
 import { readConfig } from '../lib/config.js';
 import { requireApiKey } from '../lib/auth.js';

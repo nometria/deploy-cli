@@ -1,5 +1,5 @@
 /**
- * nom list — List all your deployed apps.
+ * nom list - List all your deployed apps.
  */
 import { requireApiKey } from '../lib/auth.js';
 import { apiRequest } from '../lib/api.js';
@@ -15,7 +15,7 @@ export async function list(flags) {
     if (cached) {
       const migrations = cached.migrations || cached || [];
       printApps(migrations, flags);
-      console.log('  (cached — use --no-cache to refresh)\n');
+      console.log('  (cached - use --no-cache to refresh)\n');
       return;
     }
   }
@@ -42,8 +42,8 @@ function printApps(migrations, flags) {
 
   for (const m of migrations) {
     const status = m.delivery_type === 'hosting' ? (m.payment_status === 'paid' ? 'hosting' : 'unpaid') : m.delivery_type || 'download';
-    const platform = m.platform || '—';
-    const url = m.hosted_url || m.deploy_url || '—';
+    const platform = m.platform || '-';
+    const url = m.hosted_url || m.deploy_url || '-';
     console.log(`  ${m.app_name || m.app_id}`);
     console.log(`    Platform: ${platform}  Status: ${status}  URL: ${url}`);
     console.log();

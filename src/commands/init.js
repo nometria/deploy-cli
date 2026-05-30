@@ -1,5 +1,5 @@
 /**
- * nom init — Create nometria.json config interactively
+ * nom init - Create nometria.json config interactively
  */
 import { writeFileSync } from 'node:fs';
 import { execSync } from 'node:child_process';

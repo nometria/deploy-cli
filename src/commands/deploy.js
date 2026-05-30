@@ -1,5 +1,5 @@
 /**
- * nom deploy — Build, upload, and deploy to production.
+ * nom deploy - Build, upload, and deploy to production.
  * All calls go through Deno functions at app.nometria.com.
  */
 import { execSync } from 'node:child_process';
@@ -13,14 +13,33 @@ import { createTarball } from '../lib/tar.js';
 import { createSpinner } from '../lib/spinner.js';
 import { confirm } from '../lib/prompt.js';
 import { trackCommand } from '../lib/telemetry.js';
+import {
+  resolveDuplicateDeployIntent,
+  resolveIdleStoppedDeployIntent,
+  handleDeployApiError,
+} from '../lib/duplicateGate.js';
 import { login } from './login.js';
 import { init } from './init.js';
 
-const INSTANCE_COSTS = {
-  '2gb': { monthly: '$39', type: 't4g.small' },
-  '4gb': { monthly: '$49', type: 't4g.medium' },
-  '8gb': { monthly: '$79', type: 't4g.large' },
-  '16gb': { monthly: '$129', type: 't4g.xlarge' },
+const INSTANCE_TYPES = {
+  '2gb': 't4g.small',
+  '4gb': 't4g.medium',
+  '8gb': 't4g.large',
+  '16gb': 't4g.xlarge',
+};
+
+// Estimated monthly cost in USD per (provider, size) - Nometria managed pricing
+// for AWS; pass-through cloud-provider pricing for the rest. Updated 2024-Q4.
+const INSTANCE_PRICING = {
+  aws:          { '2gb': 39, '4gb': 49, '8gb': 79, '16gb': 129 },
+  gcp:          { '2gb': 14, '4gb': 27, '8gb': 49, '16gb': 97 },
+  azure:        { '2gb': 15, '4gb': 30, '8gb': 55, '16gb': 110 },
+  digitalocean: { '2gb': 12, '4gb': 24, '8gb': 48, '16gb': 96 },
+  do:           { '2gb': 12, '4gb': 24, '8gb': 48, '16gb': 96 },
+  hetzner:      { '2gb': 5,  '4gb': 8,  '8gb': 17, '16gb': 34 },  // EUR→USD ~1.07
+  hcloud:       { '2gb': 5,  '4gb': 8,  '8gb': 17, '16gb': 34 },
+  vercel:       { '2gb': 20, '4gb': 20, '8gb': 20, '16gb': 20 },  // hobby/pro tier flat
+  render:       { '2gb': 25, '4gb': 50, '8gb': 95, '16gb': 175 },
 };
 
 const HELP_URL = 'https://docs.nometria.com';
@@ -70,17 +89,24 @@ export async function deploy(flags) {
   }
 
   const instanceSize = config.instanceType || '4gb';
-  const cost = INSTANCE_COSTS[instanceSize];
+  const instanceVmType = INSTANCE_TYPES[instanceSize];
 
   if (isResync) {
     console.log(`\n  Resyncing ${appName} on ${config.platform} (${config.region})\n`);
   } else {
     console.log(`\n  Deploying ${appName} to ${config.platform} (${config.region})`);
-    if (cost) {
-      console.log(`  Instance: ${instanceSize} (${cost.type}) — ${cost.monthly}/mo`);
+    if (instanceVmType) {
+      console.log(`  Instance: ${instanceSize} (${instanceVmType})`);
+    }
+    const platformPricing = INSTANCE_PRICING[(config.platform || 'aws').toLowerCase()];
+    const monthlyCost = platformPricing?.[instanceSize];
+    if (monthlyCost) {
+      console.log(`  Estimated cost: ~$${monthlyCost}/month (${config.platform})`);
     }
     console.log();
   }
+
+  const deployStartTime = Date.now();
 
   const totalSteps = config.build?.command ? 5 : 4;
   let step = 0;
@@ -114,11 +140,33 @@ export async function deploy(flags) {
     throw err;
   }
 
+  const uploadFileName = `${appName}.tar.gz`;
+
+  let duplicateIntent = {};
+  let idleIntent = {};
+  try {
+    duplicateIntent = await resolveDuplicateDeployIntent({
+      apiKey,
+      tarball,
+      uploadFileName,
+      config,
+      flags,
+    });
+    idleIntent = await resolveIdleStoppedDeployIntent({
+      apiKey,
+      config: { ...config, app_id: duplicateIntent.app_id || config.app_id },
+      flags,
+    });
+  } catch (err) {
+    console.error(`\n  Pre-deploy check failed: ${err.message}\n`);
+    process.exit(1);
+  }
+
   // Step 3: Upload
   const uploadSpinner = createSpinner(stepLabel('Uploading')).start();
   let uploadResult;
   try {
-    uploadResult = await uploadFile(apiKey, tarball.buffer, `${appName}.tar.gz`);
+    uploadResult = await uploadFile(apiKey, tarball.buffer, uploadFileName);
     uploadSpinner.succeed(`Uploaded (${tarball.sizeFormatted})`);
   } catch (err) {
     uploadSpinner.fail('Upload failed');
@@ -134,16 +182,23 @@ export async function deploy(flags) {
       body: {
         app_name: appName,
         upload_url: uploadResult.upload_url,
+        upload_file_name: uploadFileName,
+        upload_file_size: tarball.buffer.byteLength,
         platform: config.platform,
         region: config.region,
         instance_type: config.instanceType || '4gb',
         env_vars: envVars,
         framework: config.framework,
-        ...(config.app_id ? { app_id: config.app_id } : {}),
+        ...(config.github_repo_url ? { github_repo_url: config.github_repo_url } : {}),
+        ...(duplicateIntent.app_id || config.app_id ? { app_id: duplicateIntent.app_id || config.app_id } : {}),
+        ...(duplicateIntent.use_existing_app_id ? { use_existing_app_id: duplicateIntent.use_existing_app_id } : {}),
+        ...(duplicateIntent.force_new ? { force_new: true } : {}),
+        ...(idleIntent.restart_if_stopped ? { restart_if_stopped: true } : {}),
       },
     });
   } catch (err) {
     deploySpinner.fail(isResync ? 'Resync failed' : 'Deploy request failed');
+    if (handleDeployApiError(err)) return;
     throw err;
   }
 
@@ -151,7 +206,7 @@ export async function deploy(flags) {
   const deployId = deployResult.deploy_id || appName;
   const dashboardUrl = `${DASHBOARD_URL}/AppDetails?app_id=${deployId}`;
   console.log(`\n  Dashboard:  ${dashboardUrl}`);
-  console.log(`  You can close this terminal — check the dashboard for progress.\n`);
+  console.log(`  You can close this terminal - check the dashboard for progress.\n`);
 
   let finalStatus;
   let consecutiveErrors = 0;
@@ -171,7 +226,7 @@ export async function deploy(flags) {
       const instanceState = statusResult.instanceState || statusResult.data?.instanceState;
       const topStatus = statusResult.status;
       const st = deployStatus || instanceState || topStatus || 'unknown';
-      deploySpinner.update(`${isResync ? 'Resyncing' : 'Deploying'} — ${st}`);
+      deploySpinner.update(`${isResync ? 'Resyncing' : 'Deploying'} - ${st}`);
 
       const isDone = deployStatus === 'completed' || deployStatus === 'running';
       if (isDone) {
@@ -191,7 +246,7 @@ export async function deploy(flags) {
       // Timeout: if instance is running but status stuck at deploying, show URL and exit gracefully
       if (Date.now() - pollStart > POLL_TIMEOUT_MS && instanceState === 'running') {
         finalStatus = statusResult;
-        deploySpinner.succeed('Deploy in progress — check dashboard for final status');
+        deploySpinner.succeed('Deploy in progress - check dashboard for final status');
         break;
       }
     } catch (err) {
@@ -204,7 +259,7 @@ export async function deploy(flags) {
         console.error(`  Help: ${HELP_URL}/deploy/overview\n`);
         process.exit(1);
       }
-      deploySpinner.update(`${isResync ? 'Resyncing' : 'Deploying'} — retrying (${consecutiveErrors}/5)...`);
+      deploySpinner.update(`${isResync ? 'Resyncing' : 'Deploying'} - retrying (${consecutiveErrors}/5)...`);
     }
   }
   if (!finalStatus) {
@@ -226,15 +281,19 @@ export async function deploy(flags) {
   // Step 7: Print result
   const url = finalStatus.deployUrl || finalStatus.data?.deployUrl || finalStatus.url || `https://${deployId}.ownmy.app`;
   const instanceInfo = finalStatus.instanceType || finalStatus.data?.instanceType || instanceSize;
+  const elapsedMs = Date.now() - deployStartTime;
+  const elapsedMin = Math.floor(elapsedMs / 60000);
+  const elapsedSec = Math.floor((elapsedMs % 60000) / 1000);
+  const timeStr = elapsedMin > 0 ? `${elapsedMin}m ${elapsedSec}s` : `${elapsedSec}s`;
   console.log(`
-  ${isResync ? 'Resynced' : 'Deployed'} successfully!
+  ${isResync ? 'Resynced' : 'Deployed'} successfully in ${timeStr}!
 
   URL:        ${url}
-  Instance:   ${instanceInfo}${cost ? ` (${cost.monthly}/mo)` : ''}
+  Instance:   ${instanceInfo}
   Dashboard:  ${dashboardUrl}
 `);
 
-  // First deploy — show next steps
+  // First deploy - show next steps
   if (!isResync) {
     console.log(`  Next steps:`);
     console.log(`    nom github connect     Connect GitHub for auto-deploy`);
@@ -260,7 +319,7 @@ export async function deploy(flags) {
             console.log('  Run: nom github connect\n');
           }
         }
-      } catch { /* non-fatal — github status check failed */ }
+      } catch { /* non-fatal - github status check failed */ }
     }
   }
 }
@@ -271,7 +330,7 @@ function sleep(ms) {
 
 async function dryRun(config, apiKey, appName) {
   const instanceSize = config.instanceType || '4gb';
-  const cost = INSTANCE_COSTS[instanceSize];
+  const instanceVmType = INSTANCE_TYPES[instanceSize];
 
   console.log(`\n  Dry run for: ${appName}`);
   console.log(`  ─────────────────────────────────\n`);
@@ -280,8 +339,8 @@ async function dryRun(config, apiKey, appName) {
   console.log(`  Config:     nometria.json`);
   console.log(`  Framework:  ${config.framework || 'unknown'}`);
   console.log(`  Platform:   ${config.platform || 'aws'} (${config.region || 'us-east-1'})`);
-  console.log(`  Instance:   ${instanceSize}${cost ? ` (${cost.type}) — ${cost.monthly}/mo` : ''}`);
-  console.log(`  App ID:     ${config.app_id || '(new — will be created)'}`);
+  console.log(`  Instance:   ${instanceSize}${instanceVmType ? ` (${instanceVmType})` : ''}`);
+  console.log(`  App ID:     ${config.app_id || '(new - will be created)'}`);
   console.log();
 
   // 2. Auth check
@@ -290,7 +349,7 @@ async function dryRun(config, apiKey, appName) {
     const authResult = await apiRequest('/cli/auth', { body: { api_key: apiKey } });
     console.log(`  Auth:       OK (${authResult.email || 'authenticated'})`);
   } catch (err) {
-    console.log(`  Auth:       FAILED — ${err.message}`);
+    console.log(`  Auth:       FAILED - ${err.message}`);
     console.log(`              Get a key: https://nometria.com/settings/api-keys\n`);
     process.exit(1);
   }

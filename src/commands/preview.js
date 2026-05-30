@@ -1,5 +1,5 @@
 /**
- * nom preview — Deploy a staging preview via Deno functions.
+ * nom preview - Deploy a staging preview via Deno functions.
  */
 import { execSync } from 'node:child_process';
 import { readConfig, resolveEnv } from '../lib/config.js';
@@ -7,6 +7,7 @@ import { requireApiKey } from '../lib/auth.js';
 import { apiRequest, uploadFile } from '../lib/api.js';
 import { createTarball } from '../lib/tar.js';
 import { createSpinner } from '../lib/spinner.js';
+import { resolveDuplicateDeployIntent } from '../lib/duplicateGate.js';
 
 export async function preview(flags) {
   const apiKey = requireApiKey();
@@ -42,6 +43,22 @@ export async function preview(flags) {
   const uploadResult = await uploadFile(apiKey, tarball.buffer, `${appName}-preview.tar.gz`);
   uploadSpinner.succeed(`Uploaded (${tarball.sizeFormatted})`);
 
+  const uploadFileName = `${appName}-preview.tar.gz`;
+
+  let duplicateIntent = {};
+  try {
+    duplicateIntent = await resolveDuplicateDeployIntent({
+      apiKey,
+      tarball,
+      uploadFileName,
+      config,
+      flags: { yes: false },
+    });
+  } catch (err) {
+    console.error(`\n  ${err.message}\n`);
+    process.exit(1);
+  }
+
   // Deploy preview via Deno function
   const deploySpinner = createSpinner('Creating preview').start();
   const result = await apiRequest('/cli/preview', {
@@ -49,6 +66,10 @@ export async function preview(flags) {
     body: {
       app_name: appName,
       upload_url: uploadResult.upload_url,
+      upload_file_name: uploadFileName,
+      upload_file_size: tarball.buffer.byteLength,
+      ...(duplicateIntent.use_existing_app_id ? { use_existing_app_id: duplicateIntent.use_existing_app_id } : {}),
+      ...(duplicateIntent.force_new ? { force_new: true } : {}),
     },
   });
   deploySpinner.succeed('Preview ready');

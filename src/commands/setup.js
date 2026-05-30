@@ -1,19 +1,19 @@
 /**
- * nom setup — Generate AI tool config files for every major IDE/agent.
+ * nom setup - Generate AI tool config files for every major IDE/agent.
  *
  * Creates:
- *   .cursor/rules/nometria.mdc     — Cursor AI rules
- *   .clinerules                     — Cline / Roo Code
- *   .windsurfrules                  — Windsurf (Codeium)
- *   .github/copilot-instructions.md — GitHub Copilot
- *   .github/workflows/nometria-deploy.yml — Auto-deploy on push
- *   CLAUDE.md                       — Claude Code project instructions
- *   AGENTS.md                       — Universal agent deployment guide
- *   .claude/commands/deploy.md      — Claude Code /deploy slash command
- *   .claude/commands/preview.md     — Claude Code /preview slash command
- *   .claude/commands/status.md      — Claude Code /status slash command
- *   .claude/commands/nometria-login.md — Claude Code /nometria-login slash command
- *   .continue/config.json           — Continue.dev MCP config
+ *   .cursor/rules/nometria.mdc     - Cursor AI rules
+ *   .clinerules                     - Cline / Roo Code
+ *   .windsurfrules                  - Windsurf (Codeium)
+ *   .github/copilot-instructions.md - GitHub Copilot
+ *   .github/workflows/nometria-deploy.yml - Auto-deploy on push
+ *   CLAUDE.md                       - Claude Code project instructions
+ *   AGENTS.md                       - Universal agent deployment guide
+ *   .claude/commands/deploy.md      - Claude Code /deploy slash command
+ *   .claude/commands/preview.md     - Claude Code /preview slash command
+ *   .claude/commands/status.md      - Claude Code /status slash command
+ *   .claude/commands/nometria-login.md - Claude Code /nometria-login slash command
+ *   .continue/config.json           - Continue.dev MCP config
  */
 import { mkdirSync, writeFileSync, existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -67,7 +67,7 @@ export async function setup(flags) {
   writeFileSync(join(dir, 'CLAUDE.md'), claudeMd(appName, platform));
   files.push('CLAUDE.md');
 
-  // 7. AGENTS.md — universal agent guide
+  // 7. AGENTS.md - universal agent guide
   writeFileSync(join(dir, 'AGENTS.md'), agentsMd(appName, platform));
   files.push('AGENTS.md');
 
@@ -156,8 +156,8 @@ This project deploys via **Nometria** (\`nom\` CLI). Configuration is in \`nomet
 2. When the user asks for a preview, run \`nom preview\`
 3. For deployment status, run \`nom status\`
 4. Environment variables are managed via \`nom env set KEY=VALUE\`
-5. Never call the Nometria Python API directly — use the \`nom\` CLI
-6. The deployment config is in \`nometria.json\` — do not modify it without asking
+5. Never call the Nometria Python API directly - use the \`nom\` CLI
+6. The deployment config is in \`nometria.json\` - do not modify it without asking
 7. If not authenticated, run \`nom login\` first (opens browser)
 
 ## Quick Reference
@@ -183,14 +183,14 @@ This project (${appName}) deploys via Nometria.
 
 ## Important
 
-- Configuration is in \`nometria.json\` — read it before making deployment decisions
+- Configuration is in \`nometria.json\` - read it before making deployment decisions
 - If not authenticated, run \`nom login\` (opens browser for sign-in)
 - Environment variables: \`nom env set KEY=VALUE\` / \`nom env list\`
 - Custom domains: \`nom domain add yourdomain.com\`
 - Instance management: \`nom start\`, \`nom stop\`, \`nom upgrade 8gb\`
 - GitHub auto-deploy: \`nom github connect\`
 - Security scan: \`nom scan\`
-- Never call backend APIs directly — always use the \`nom\` CLI
+- Never call backend APIs directly - always use the \`nom\` CLI
 - The MCP server \`@nometria-ai/claude-code\` is also available for tool-based access
 `;
 }
@@ -253,7 +253,7 @@ This project (**${appName}**) deploys to **${platform}** using Nometria.
 
 ## Notes
 
-- Always use the \`nom\` CLI — do not call Nometria APIs directly
+- Always use the \`nom\` CLI - do not call Nometria APIs directly
 - Read \`nometria.json\` for current deployment configuration
 - Install: \`npm i -g @nometria-ai/nom\` or use \`npx @nometria-ai/nom\`
 `;
@@ -634,11 +634,11 @@ curl -s -X POST https://app.nometria.com/checkAwsStatus \\
 Present results as a clear table showing App, Platform, Status, URL, and Instance.
 
 Use these status indicators:
-- running — app is live
-- deploying / launching — deployment in progress
-- stopped — instance exists but is off
-- failed — deployment failed (show error if available)
-- none — not deployed to hosting
+- running - app is live
+- deploying / launching - deployment in progress
+- stopped - instance exists but is off
+- failed - deployment failed (show error if available)
+- none - not deployed to hosting
 
 If \\\`$ARGUMENTS\\\` was provided, filter the results to match that app name.
 
@@ -728,7 +728,7 @@ function agentsMd(appName, platform) {
 
 > Deploy any app to any cloud from your IDE, CLI, or AI agent. Works with VS Code, Cursor, Claude Code, and any tool that can run \\\`curl\\\` or \\\`npx\\\`.
 
-## Quick Start — CLI (recommended)
+## Quick Start - CLI (recommended)
 
 \`\`\`bash
 # Install and deploy in seconds
@@ -737,7 +737,7 @@ npx @nometria-ai/nom init
 npx @nometria-ai/nom deploy
 \`\`\`
 
-## Quick Start — curl (for AI agents)
+## Quick Start - curl (for AI agents)
 
 \`\`\`bash
 # 1. Set your token (API key or JWT)
@@ -786,34 +786,34 @@ All endpoints are \\\`POST\\\` with JSON body and \\\`Content-Type: application/
 ## API Reference
 
 ### List Apps
-\\\`POST /listUserMigrations\\\` — Returns all migrations with app_id, status, delivery_type, hosted_url
+\\\`POST /listUserMigrations\\\` - Returns all migrations with app_id, status, delivery_type, hosted_url
 
 ### Check Status
-\\\`POST /checkAwsStatus\\\` — Body: \\\`{"app_id": "..."}\\\` — Returns instanceState, deploymentStatus, ipAddress, deployUrl
+\\\`POST /checkAwsStatus\\\` - Body: \\\`{"app_id": "..."}\\\` - Returns instanceState, deploymentStatus, ipAddress, deployUrl
 
 ### Deploy New Instance
-\\\`POST /deployToAws\\\` — Body: \\\`{"migration_id": "..."}\\\` — Creates new EC2 instance. Poll checkAwsStatus every 5s.
+\\\`POST /deployToAws\\\` - Body: \\\`{"migration_id": "..."}\\\` - Creates new EC2 instance. Poll checkAwsStatus every 5s.
 
 ### Resync Running App
-\\\`POST /resyncHosting\\\` — Body: \\\`{"app_id": "..."}\\\` — Syncs latest code to running instance.
+\\\`POST /resyncHosting\\\` - Body: \\\`{"app_id": "..."}\\\` - Syncs latest code to running instance.
 
 ### Staging Preview
-\\\`POST /deployStagingPreview\\\` — Body: \\\`{"migration_id": "...", "production": false}\\\` — Free, 2hr preview.
+\\\`POST /deployStagingPreview\\\` - Body: \\\`{"migration_id": "...", "production": false}\\\` - Free, 2hr preview.
 
 ### Instance Control
-\\\`POST /updateInstanceState\\\` — Body: \\\`{"app_id": "...", "instance_state": "start|stop|terminate"}\\\`
+\\\`POST /updateInstanceState\\\` - Body: \\\`{"app_id": "...", "instance_state": "start|stop|terminate"}\\\`
 
 ### Upgrade Instance
-\\\`POST /upgradeInstance\\\` — Body: \\\`{"app_id": "...", "instance_type": "2gb|4gb|8gb|16gb"}\\\`
+\\\`POST /upgradeInstance\\\` - Body: \\\`{"app_id": "...", "instance_type": "2gb|4gb|8gb|16gb"}\\\`
 
 ### Environment Variables
-\\\`POST /setEnvVars\\\` — Body: \\\`{"app_id": "...", "env_vars": {"KEY": "value"}}\\\`
+\\\`POST /setEnvVars\\\` - Body: \\\`{"app_id": "...", "env_vars": {"KEY": "value"}}\\\`
 
 ### Custom Domain
-\\\`POST /addCustomDomain\\\` — Body: \\\`{"app_id": "...", "custom_domain": "app.yourdomain.com"}\\\`
+\\\`POST /addCustomDomain\\\` - Body: \\\`{"app_id": "...", "custom_domain": "app.yourdomain.com"}\\\`
 
 ### AI Security Scan
-\\\`POST /runAiScan\\\` — Body: \\\`{"app_id": "...", "migration_id": "..."}\\\`
+\\\`POST /runAiScan\\\` - Body: \\\`{"app_id": "...", "migration_id": "..."}\\\`
 
 ---
 
@@ -859,7 +859,7 @@ Report URL to user
 
 | Tool | Integration |
 |------|-------------|
-| **nom CLI** | \\\`npx @nometria-ai/nom deploy\\\` — deploy from terminal |
+| **nom CLI** | \\\`npx @nometria-ai/nom deploy\\\` - deploy from terminal |
 | **Claude Code** | Slash commands: \\\`/deploy\\\`, \\\`/preview\\\`, \\\`/status\\\`, \\\`/nometria-login\\\` |
 | **Cursor** | Auto-rules in \\\`.cursor/rules/nometria.mdc\\\` |
 | **VS Code / Cursor** | Extension: search "Nometria" in marketplace |
@@ -961,13 +961,13 @@ if [ -n "$SCORE" ] && [ "$SCORE" -lt 70 ]; then
   echo "BLOCKED: Security score $SCORE/100 (minimum: 70). Run 'nom scan' for details."
   exit 2
 fi
-[ -n "$SCORE" ] && echo "Nometria: security score $SCORE/100 — passed."
+[ -n "$SCORE" ] && echo "Nometria: security score $SCORE/100 - passed."
 `;
 }
 
 function costGuardianHook() {
   return `#!/usr/bin/env bash
-# Nometria: Cost guardian — detect idle instances on session start
+# Nometria: Cost guardian - detect idle instances on session start
 set -euo pipefail
 
 TOKEN="\${NOMETRIA_API_KEY:-\${NOMETRIA_TOKEN:-}}"

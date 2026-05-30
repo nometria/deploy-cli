@@ -1,5 +1,5 @@
 /**
- * nom db — Database management commands.
+ * nom db - Database management commands.
  *
  * Subcommands:
  *   backup          Create a database backup
@@ -101,7 +101,7 @@ async function dbRestore(flags, backupId) {
       }
       console.log('  Available backups:\n');
       for (const b of backups) {
-        console.log(`  ${b.id}  ${b.created_at || '—'}  ${b.size || '—'}`);
+        console.log(`  ${b.id}  ${b.created_at || '-'}  ${b.size || '-'}`);
       }
       console.log('\n  Restore: nom db restore <backup_id>\n');
     } catch (err) {
