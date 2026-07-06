@@ -1,7 +1,7 @@
 /**
  * nom init - Create nometria.json config interactively
  */
-import { writeFileSync } from 'node:fs';
+import { writeFileSync, existsSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { join, basename } from 'node:path';
 import { detectFramework, detectPackageManager, detectServices, detectMonorepo } from '../lib/detect.js';
@@ -122,6 +122,19 @@ export async function init(flags) {
   writeFileSync(configPath, JSON.stringify(config, null, 2) + '\n');
 
   console.log(`\n  Created ${CONFIG_FILE}`);
+
+  // Optionally scaffold a GitHub Actions deploy workflow.
+  const wantCi = flags.ci || (!flags.yes && existsSync(join(dir, '.git')) && await confirm('Generate a GitHub Actions deploy workflow?', false));
+  if (wantCi) {
+    const { generateWorkflow, requiredSecrets, WORKFLOW_PATH } = await import('../lib/ciWorkflow.js');
+    const { mkdirSync } = await import('node:fs');
+    const wf = generateWorkflow({ config, packageManager: pkgManager });
+    const wfPath = join(dir, WORKFLOW_PATH);
+    mkdirSync(join(dir, '.github', 'workflows'), { recursive: true });
+    writeFileSync(wfPath, wf);
+    console.log(`  Created ${WORKFLOW_PATH}`);
+    console.log(`  Add repo secrets: ${requiredSecrets(config).join(', ')}`);
+  }
 
   // Validate build if a build command exists
   if (buildCmd && !flags.yes) {

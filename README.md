@@ -93,6 +93,23 @@ Use the `@env:` prefix in `nometria.json` to reference local environment variabl
 }
 ```
 
+## Continuous Deployment
+
+Generate a GitHub Actions workflow that runs `nom deploy` on every push:
+
+```bash
+nom ci                 # writes .github/workflows/deploy.yml
+nom ci --preview       # also deploy a staging preview on pull requests
+nom ci --branch main --node 20
+```
+
+The generated workflow installs your detected package manager, builds, and
+deploys using a `NOMETRIA_API_KEY` repo secret. Any `@env:` references in
+`nometria.json` are surfaced as `env:` entries wired to matching repo secrets,
+so secrets are injected at deploy time and never committed. `nom ci` prints the
+exact list of secrets you need to add under
+**Settings → Secrets and variables → Actions**.
+
 ## Supported Platforms
 
 - **AWS** (EC2 + Route53)

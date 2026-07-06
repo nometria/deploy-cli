@@ -39,6 +39,7 @@ import { open } from './commands/open.js';
 import { services } from './commands/services.js';
 import { doctor } from './commands/doctor.js';
 import { webhook } from './commands/webhook.js';
+import { ci } from './commands/ci.js';
 
 const { values, positionals } = parseArgs({
   allowPositionals: true,
@@ -56,6 +57,8 @@ const { values, positionals } = parseArgs({
     production:{ type: 'boolean', default: false },
     message:   { type: 'string', short: 'm' },
     events:    { type: 'string' },
+    branch:    { type: 'string' },
+    node:      { type: 'string' },
   },
   strict: false,
 });
@@ -110,6 +113,7 @@ const commands = {
   services,
   doctor,
   webhook,
+  ci,
 };
 
 const handler = commands[command];
@@ -203,6 +207,7 @@ function printHelp() {
     webhook delete <id> Remove a webhook
 
     scan                Run AI security scan
+    ci [--preview]      Generate a GitHub Actions deploy workflow
     open [target]       Open app/dashboard/logs/docs in browser
     doctor              Check system health and diagnose issues
     cron add <s> <cmd>  Add a scheduled task
